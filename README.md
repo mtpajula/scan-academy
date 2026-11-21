@@ -1,4 +1,4 @@
-# 📡 Scan Academy — laser scanning field training game
+# Scan Academy — laser scanning field training game
 
 A browser game that teaches surveying students the real workflow of terrestrial
 laser scanning. No build step, no dependencies — open `index.html` in a browser

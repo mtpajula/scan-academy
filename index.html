@@ -8,8 +8,21 @@
 </head>
 <body>
 
+<!-- laser scanner icon (head + lens + beam on tripod) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="icon-scanner" viewBox="0 0 32 32">
+    <path d="M22 7.5 L31 3.5 L31 16.5 L22 12.5 Z" fill="#48dbfb" opacity="0.45"/>
+    <rect x="5" y="4.5" width="17" height="11" rx="3.5" fill="#48dbfb"/>
+    <circle cx="18.5" cy="10" r="3.2" fill="#062b36"/>
+    <circle cx="19.4" cy="9.1" r="1" fill="#48dbfb"/>
+    <rect x="10.5" y="15.5" width="7" height="3" rx="1" fill="#8b98ab"/>
+    <path d="M14 18.5 L7.5 28.5 M14 18.5 L20.5 28.5 M14 18.5 L14 28.5"
+          stroke="#8b98ab" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
 <header id="topbar">
-  <div class="brand">📡 Scan Academy</div>
+  <div class="brand"><svg class="ic"><use href="#icon-scanner"/></svg> Scan Academy</div>
   <nav id="phases">
     <button data-screen="prep"     class="phase-btn">1 · Prepare</button>
     <button data-screen="field"    class="phase-btn">2 · Field work</button>
@@ -78,7 +91,7 @@
           <div class="hud-row"><span>Scans</span><span id="scan-count" class="pill"></span></div>
         </div>
 
-        <button id="btn-scan" class="big primary">📷 SCAN</button>
+        <button id="btn-scan" class="big primary"><svg class="ic"><use href="#icon-scanner"/></svg> SCAN</button>
         <button id="btn-swap" class="small">🔋 Swap spare battery</button>
         <div id="scan-status" class="scan-status"></div>
 

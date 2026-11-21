@@ -110,7 +110,7 @@ G.field = {
       residual: null,
     };
     this.anim = { scan, start: performance.now(), dur: 1500, sweep: 0 };
-    document.getElementById('scan-status').textContent = '📡 Scanning…';
+    document.getElementById('scan-status').textContent = 'Scanning…';
     this.updateHud();
   },
 

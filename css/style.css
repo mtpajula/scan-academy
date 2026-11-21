@@ -29,7 +29,9 @@ body {
   border-bottom: 1px solid var(--line);
   position: sticky; top: 0; z-index: 50;
 }
-.brand { font-weight: 700; font-size: 18px; color: var(--accent); }
+.brand { font-weight: 700; font-size: 18px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.ic { width: 20px; height: 20px; flex-shrink: 0; }
+button .ic { width: 17px; height: 17px; vertical-align: -3px; margin-right: 4px; }
 #phases { display: flex; gap: 8px; }
 .phase-btn {
   background: var(--panel2); color: var(--dim);
