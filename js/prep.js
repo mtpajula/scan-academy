@@ -8,6 +8,7 @@ G.prep = {
     G.state.van = [];
     this.render();
     document.getElementById('btn-to-field').onclick = () => {
+      if (G.state.scans.length && !confirm('Driving to site again starts the field work over (all scans are lost). Continue?')) return;
       G._fieldEntered = true;
       G.field.enter();
       G.showScreen('field');

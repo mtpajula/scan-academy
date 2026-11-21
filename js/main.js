@@ -8,8 +8,7 @@ G.state = {
   van: [],
   scans: [],
   battery: 100, spares: 0, maxScans: 99,
-  coverage: 0, linkEdges: [], bridge: false,
-  targetAssign: {},
+  linkEdges: [],
   results: null,
 };
 

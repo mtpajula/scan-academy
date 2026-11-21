@@ -35,6 +35,33 @@ G.losClear = function (ax, ay, bx, by, segs) {
   return true;
 };
 
+/* Distance from point to segment */
+G.distPointSeg = function (px, py, s) {
+  const vx = s.x2 - s.x1, vy = s.y2 - s.y1;
+  const L = vx * vx + vy * vy;
+  const t = L ? G.clamp(((px - s.x1) * vx + (py - s.y1) * vy) / L, 0, 1) : 0;
+  return Math.hypot(px - (s.x1 + vx * t), py - (s.y1 + vy * t));
+};
+
+/* Smallest absolute difference between two angles */
+G.angDiff = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+
+/* Pick n well-spread points (farthest-point sampling) */
+G.spreadSample = function (pts, n) {
+  if (pts.length <= n) return pts.slice();
+  const out = [pts[0]];
+  while (out.length < n) {
+    let best = null, bd = -1;
+    for (const p of pts) {
+      let d = Infinity;
+      for (const q of out) d = Math.min(d, (p.x - q.x) ** 2 + (p.y - q.y) ** 2);
+      if (d > bd) { bd = d; best = p; }
+    }
+    out.push(best);
+  }
+  return out;
+};
+
 G.pointInRect = function (x, y, r, pad = 0) {
   return x > r.x - pad && x < r.x + r.w + pad && y > r.y - pad && y < r.y + r.h + pad;
 };

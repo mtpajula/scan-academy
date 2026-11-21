@@ -183,7 +183,39 @@ canvas:active { cursor: grabbing; }
   border-radius: 6px; padding: 6px 10px; cursor: pointer; font-weight: 600;
 }
 .id-popup-buttons button:hover { border-color: var(--accent); }
-.id-popup-buttons button.used { opacity: .35; }
+.id-popup-buttons button.current { border-color: var(--warn); color: var(--warn); }
+
+/* ---------- registration panel ---------- */
+.reg-panel { width: 360px; }
+.reg-panel .scan-list li { cursor: pointer; }
+.chip { font-size: 10.5px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); margin-left: 3px; white-space: nowrap; }
+.chip.ok { color: var(--good); border-color: rgba(29,209,161,.5); }
+.chip.warn { color: var(--warn); border-color: rgba(254,202,87,.5); }
+.chip.bad { color: var(--bad); border-color: rgba(255,107,107,.5); }
+.chip.dim { color: var(--dim); }
+.reg-card {
+  background: var(--panel2); border: 1px solid var(--accent); border-radius: 8px;
+  padding: 9px 10px; margin: 10px 0; font-size: 13px; display: flex; flex-direction: column; gap: 7px;
+}
+.reg-card .tag { font-size: 11px; color: var(--dim); }
+.reg-card .lbl { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .04em; margin-right: 4px; }
+.card-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.card-col { display: flex; flex-direction: column; gap: 4px; }
+.link-row { display: flex; align-items: center; gap: 6px; }
+.link-row .grow { flex: 1; }
+.link-row .dot { width: 9px; height: 9px; border-radius: 50%; }
+.chip-btn, .reg-card button.mini {
+  background: var(--panel); color: var(--txt); border: 1px solid var(--line);
+  border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.chip-btn.unnamed { border-color: #ff9f43; color: #ff9f43; }
+.chip-btn:hover, .reg-card button.mini:hover { border-color: var(--accent); }
+.net-status b.bad { color: var(--bad); }
+.cons-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 10px; }
+.cons-table td { padding: 3px 5px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.cons-table td:last-child { text-align: right; white-space: nowrap; }
+.cons-table tr.off td { opacity: .4; text-decoration: line-through; }
+.cons-table .ok { color: var(--good); } .cons-table .warn { color: var(--warn); } .cons-table .bad { color: var(--bad); font-weight: 700; }
 
 /* ---------- report ---------- */
 #report-canvas {
@@ -203,6 +235,7 @@ canvas:active { cursor: grabbing; }
 .report-doc th { background: #dde5ee; }
 .report-doc .ok { color: #0a7d4f; font-weight: 600; }
 .report-doc .err { color: #c0392b; font-weight: 600; }
+.report-doc .warnc { color: #b7791f; font-weight: 600; }
 .report-doc .note { background: #fff8e1; border: 1px solid #ecd28a; border-radius: 6px; padding: 8px 10px; margin: 8px 0; }
 .report-doc .bigstat { font-size: 17px; font-weight: 700; color: #12325a; }
 

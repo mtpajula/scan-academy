@@ -15,53 +15,46 @@ laser scanning. No build step, no dependencies — open `index.html` in a browse
    - no spare batteries → 100% battery only; each scan drains 14% and you must
      press **🔋 Swap spare battery** to use a spare
    - no PPE → site safety locks the door to outside
-   - no weather cover → rainy outside scans come out shaken
-   - no target ID labels → cannot label targets in phase 3
-   - no laptop / no cables → registration penalties
+   - no rain umbrella → outdoor scans get a wet window (noisy, bad scan)
+   - no target ID labels → targets cannot be named in registration
+   - no laptop / no cables → (kit score)
 
 2. **Field work** — top view of an industrial hall (concrete pillars) with a
-   door to a rainy yard. Total-station targets T1–T6 are already placed.
-   - **Drag the scanner with the mouse**, press **SCAN** (or Space) — a small
-     rotating sweep animation plays, points appear as the beam passes.
-   - Scanning from one spot leaves **shadows** behind concrete structures —
-     there is *no UI hint*; the gaps are only visible in the accumulated cloud.
-   - **Targets are only seen with line of sight**, in some scans only — they
-     form the skeleton, so scans must overlap densely for cloud-to-cloud
-     registration.
-   - Scanning **outside** without linking inside↔outside clouds lets
-     temperature-driven air refraction drift the indoor cloud (~28 mm error).
-   - The **compressor vibrates**: scans near it (or uncovered rain scans) are
-     *shaken* (bad) — you must spot and exclude them later.
+   door to a rainy yard. Total-station control targets T1–T6 are already placed.
+   - **Drag the scanner**, press **SCAN** (or Space). Invalid spots (inside
+     objects, against a wall, outside without PPE) snap back to the last valid
+     position; scanning is validated too.
+   - Scanning from one spot leaves **shadows** behind concrete — no UI hint.
+   - Targets are recognised only with line of sight and within 18 m.
+   - **Compressor vibration** → angular wobble (error grows with range);
+     **no tripod** → random-walk drift. Both make a *bad* scan.
+   - **Rain** (everywhere outside the hall roof): some beams hit droplets →
+     short-range ghost points, even with an umbrella. **No umbrella** → wet
+     window → blurred, noisy (bad) scan. **With umbrella** → its tripod clamp
+     shadows a narrow sector of every outdoor scan (scan that spot from elsewhere).
 
-3. **Registration** (top view, sequential) — **no floor plan is shown** (that
-   is not visible in the real world either): only point clouds + control targets.
-   - Only the **joined network** (drawn as one merged pale-blue "registered
-     cloud") and the **one selected unregistered scan** are visible at a time.
-   - **Scan 1 is already placed** as the reference frame — no snapping into the
-     real world. Set it as base after labeling its targets.
-   - Pick which scan joins next in the list (if the selected one is from a
-     totally different location with no overlap, choose another), drag its
-     cloud until it matches the registered cloud (coarse, snaps ✔), label the
-     targets it sees, then **Register to network** (animated fine
-     cloud-to-cloud ICP).
-   - A join needs **enough shared surfaces** (≥25 shared surface cells and
-     ≥20% of the smaller cloud) — otherwise there is no cloud-to-cloud
-     connection and the join is refused.
-   - **Targets must be named before a scan can be registered**: a checklist
-     above the button shows what's missing, the button stays disabled with the
-     reason, needed targets get ⚠ rows in the target list, an inline T1–T6
-     chooser per target, and a pulsing ring on the canvas.
-   - Tick **"bad scan"** for shaken scans — they can never join. Uncoarsely
-     aligned joins get "ICP did not converge" (+18 mm).
-   - When every good scan is in the network, **✔ Finish registration** computes
-     residuals and accuracy.
+3. **Registration** — works like real registration software.
+   - Every scan arrives shifted and rotated in its own frame. The **targets it
+     recognised (◆) move with the scan**. Control points (✛) are the known
+     total-station coordinates.
+   - **Name the targets in each scan** (click ◆). A name ties the scan to that
+     control point — and through it to every other scan that saw it.
+   - **Cloud-to-cloud links** between overlapping scans (ICP). ICP only
+     converges if the pair is already roughly aligned (drag, wheel / Q E to
+     rotate, or register by targets first); from > 3 m it fails, from
+     0.8–3 m it converges to a wrong local minimum (high ICP RMS).
+   - **Run registration** = least-squares adjustment (Gauss–Newton) over all
+     scans. Each constraint gets an error; redundancy is shown. Untick bad
+     constraints, fix names, tick *bad* for bad scans, run again.
+   - **The lesson**: a wrongly named target pulls its scan to the wrong place.
+     With cross-registration (redundancy) it shows up as a red error; in a
+     plain chain / single-target scan it is invisible — errors look green.
 
-4. **Report** — a top-view canvas of the final registered cloud (merged cloud,
-   green connection lines, numbered stations, excluded scans in gray, targets
-   flagged ✔/✘ with assigned IDs) plus the written report: scan table with
-   residuals, connection list, target ID check, coverage %, estimated accuracy
-   in mm, equipment not packed. **Deliver to the customer** → score (0–100,
-   ★–★★★) with feedback on every learning point.
+4. **Report** — the customer checks against an independent survey: for every
+   scan the **reported** error is shown next to the **true** error, the cloud is
+   coloured by true error, wrong target names are listed. Score (0–100):
+   usable coverage 20, true accuracy 25, target names 15, cross-checked scans 10,
+   bad scans handled 10, georeferenced + yard 10, kit 10.
 
 ## Files
 
@@ -79,16 +72,14 @@ js/main.js      state + screen manager + main loop
 
 ## Simulation notes
 
-- 360 rays per scan against all wall segments (analytic ray/segment
-  intersection); 1 px = 5 cm.
-- Coverage is measured on discretized surface cells (12 px grid); a scan covers
-  the cells its points fall in (3×3 neighbourhood), counted only on real
-  surfaces.
-- Scan-to-scan links (cloud-to-cloud) require ≥25 exactly shared surface cells
-  AND ≥20% of the smaller cloud's cells.
-- Shaken scans (compressor vibration zone, rain without cover, no tripod) get
-  extra point noise and a residual penalty if left in the network.
-- Registration residuals (mm): base noise 0.8–2.5, shaken +6–14, ICP
-  non-convergence (no coarse alignment) +18, no inside↔outside link +28 mm
-  refraction drift on indoor scans, wrong/missing target IDs +6 mm each,
-  no laptop +4, no cables +3. Accuracy = mean residual + ID penalty.
+- 360 rays per scan against all segments (analytic ray/segment intersection);
+  1 px = 5 cm, range 26 m.
+- Coverage: discretised surface cells (12 px) of walls, pillars, machine and
+  yard objects (not the site fence); counted from registered scans whose true
+  error is ≤ 50 mm.
+- Cloud-to-cloud overlap requires ≥ 25 shared surface cells AND ≥ 20 % of the
+  smaller cloud; 5 well-spread shared points act as ICP tie points.
+- Adjustment unknowns: (dx, dy, rotation) per scan. With ≥ 2 named control
+  points the network is georeferenced; otherwise scan 1 is the datum and equal
+  names only tie scans to each other. Scans with < 3 equations are flagged
+  under-constrained.

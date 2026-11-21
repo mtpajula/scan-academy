@@ -109,36 +109,30 @@
       <div class="canvas-wrap">
         <canvas id="reg-canvas" width="960" height="640"></canvas>
         <div id="id-popup" class="id-popup hidden">
-          <div class="id-popup-title">Label target <b id="id-popup-target"></b></div>
+          <div class="id-popup-title">Name target <b id="id-popup-target"></b></div>
           <div id="id-popup-buttons" class="id-popup-buttons"></div>
         </div>
       </div>
-      <aside class="side-panel">
+      <aside class="side-panel reg-panel">
         <h2>Registration</h2>
-        <ol class="hint">
-          <li>📌 <b>Scan 1 is already placed</b> (reference frame). Label the targets it sees, then <b>Set base scan</b>. Only the network + the selected scan are shown — one at a time.</li>
-          <li>🔗 <b>Join scans one by one:</b> pick the next scan in the list (if the selected one is from a totally different location with no overlap, choose another!), drag its cloud until it matches the registered cloud ✔, then <b>Register to network</b>. A join needs enough shared surfaces — cloud-to-cloud (dashed line).</li>
-          <li>🏷 <b>Targets must be named before a scan can be registered</b> — the checklist above the button shows what's missing; the register button stays disabled until targets are labeled (⚠ in the target list, or click the pulsing target on the canvas).</li>
-          <li>❌ Tick <b>“bad scan”</b> for shaken scans — they cannot join the network.</li>
-          <li>✔ When every good scan is in the network, <b>Finish registration</b>.</li>
-        </ol>
-
-        <div id="reg-network" class="net-status"></div>
-        <div id="reg-checklist" class="net-status" style="border-color:var(--warn)"></div>
-
-        <h3>Next scan to join</h3>
-        <ul id="reg-next-list" class="scan-list"></ul>
-
-        <button id="btn-reg" class="big primary">📌 Set base scan</button>
-        <div id="reg-status" class="scan-status"></div>
+        <p class="hint">Each scan arrives in its own position. The <b>◆ targets</b> it recognised move with it.
+          <b>Name the targets</b> (ties the scan to that control point ✛) and <b>link overlapping scans</b>
+          cloud-to-cloud — ICP needs the pair roughly aligned first. Then <b>Run registration</b> and read the errors.
+          Link scans <i>across</i> each other: without redundancy, mistakes stay hidden.</p>
 
         <h3>Scans</h3>
         <ul id="reg-scan-list" class="scan-list"></ul>
 
-        <h3>Targets</h3>
-        <ul id="reg-target-list" class="scan-list"></ul>
+        <div id="reg-card" class="reg-card"></div>
 
-        <button id="btn-to-report" class="big" disabled>Generate report →</button>
+        <button id="btn-solve" class="big primary">⚙ Run registration</button>
+        <div id="reg-status" class="scan-status"></div>
+        <div id="reg-summary" class="net-status"></div>
+
+        <h3>Constraints <span class="tag">(largest error first · untick to disable)</span></h3>
+        <table id="reg-cons" class="cons-table"></table>
+
+        <button id="btn-to-report" class="big" disabled>Finish → report</button>
       </aside>
     </div>
   </section>

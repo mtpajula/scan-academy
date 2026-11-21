@@ -41,16 +41,27 @@ G.EQUIPMENT = [
   { id: 'tripod',   name: 'Tripod',               desc: 'Handheld scanning shakes every scan.' },
   { id: 'battery',  name: 'Spare batteries ×2',   desc: 'Each scan drains 14%. Swap a spare in when the current one runs empty.' },
   { id: 'sdcard',   name: 'SD card',              desc: 'Without it the scanner stores only 4 scans.' },
-  { id: 'targets',  name: 'Target ID labels',     desc: 'Without labels you cannot ID targets in registration.' },
+  { id: 'targets',  name: 'Target ID labels',     desc: 'Number plates for the targets. Without them targets cannot be identified in the scans.' },
   { id: 'laptop',   name: 'Field laptop',         desc: 'Needed for on-site registration. No laptop = work back at the office.' },
   { id: 'cables',   name: 'Cables & charger',     desc: 'Transfer cables. Without them data transfer is unreliable.' },
   { id: 'ppe',      name: 'PPE (helmet, vest, boots)', desc: 'Site safety. No PPE → no access outside the hall!' },
-  { id: 'weather',  name: 'Weather cover',        desc: 'It is raining outside. Uncovered outside scans get noisy.' },
+  { id: 'weather',  name: 'Rain umbrella',        desc: 'Keeps the scanner window dry in the rain. Its tripod clamp shadows a narrow sector.' },
   { id: 'tape',     name: 'Measuring tape',       desc: 'For target heights and checks.' },
   { id: 'notebook', name: 'Notebook & pen',       desc: 'Paper backup of scan log. Customers like it.' },
   { id: 'coffee',   name: 'Coffee thermos',       desc: 'Morale. The customer notices.' },
 ];
 G.VAN_SLOTS = 8;
+
+/* Scanner parameters (px) */
+G.SCAN_RANGE = 520;          // max measuring range (26 m)
+G.TARGET_RANGE = 360;        // targets are recognised only up to 18 m
+G.UMBRELLA = { dir: Math.PI * 0.75, half: 0.12 };  // clamp shadow sector (direction, half-width rad)
+
+/* Is a point inside the hall (roofed) — everything else is outdoors in the rain */
+G.isInside = function (x, y) {
+  const h = G.MAP.hall;
+  return x > h.x && x < h.x + h.w && y > h.y && y < h.y + h.h;
+};
 
 G.PALETTE = ['#ff6b6b','#feca57','#48dbfb','#1dd1a1','#f368e0','#ff9f43',
              '#a29bfe','#55efc4','#74b9ff','#e17055','#fd79a8','#00cec9'];
@@ -58,14 +69,13 @@ G.PALETTE = ['#ff6b6b','#feca57','#48dbfb','#1dd1a1','#f368e0','#ff9f43',
 /* Build all line segments: blockers (rays stop) + surfaces (coverage is measured on them) */
 G.buildSegments = function () {
   const segs = [];
-  const addRect = (r) => {
-    segs.push({ x1: r.x,     y1: r.y,     x2: r.x + r.w, y2: r.y,     kind: 'wall' });
-    segs.push({ x1: r.x + r.w, y1: r.y,   x2: r.x + r.w, y2: r.y + r.h, kind: 'wall' });
-    segs.push({ x1: r.x + r.w, y1: r.y + r.h, x2: r.x,   y2: r.y + r.h, kind: 'wall' });
-    segs.push({ x1: r.x,     y1: r.y + r.h, x2: r.x,     y2: r.y,     kind: 'wall' });
+  const addRect = (r, kind) => {
+    segs.push({ x1: r.x,     y1: r.y,     x2: r.x + r.w, y2: r.y,     kind });
+    segs.push({ x1: r.x + r.w, y1: r.y,   x2: r.x + r.w, y2: r.y + r.h, kind });
+    segs.push({ x1: r.x + r.w, y1: r.y + r.h, x2: r.x,   y2: r.y + r.h, kind });
+    segs.push({ x1: r.x,     y1: r.y + r.h, x2: r.x,     y2: r.y,     kind });
   };
-  const w = G.MAP.world;
-  addRect(w);                                   // site boundary
+  addRect(G.MAP.world, 'fence');                // site boundary fence (not part of the survey)
   const h = G.MAP.hall;
   const d = h.door;
   // hall walls (east wall split by the door opening)
@@ -74,15 +84,18 @@ G.buildSegments = function () {
   segs.push({ x1: h.x, y1: h.y, x2: h.x, y2: h.y + h.h, kind: 'wall' });
   segs.push({ x1: h.x + h.w, y1: h.y, x2: h.x + h.w, y2: d.y1, kind: 'wall' });
   segs.push({ x1: h.x + h.w, y1: d.y2, x2: h.x + h.w, y2: h.y + h.h, kind: 'wall' });
-  G.MAP.pillars.forEach(p => addRect({ ...p, kind: 'pillar' }));
-  G.MAP.outside.forEach(o => addRect({ ...o, kind: 'outside' }));
+  G.MAP.pillars.forEach(p => addRect(p, 'pillar'));
+  addRect(G.MAP.machine, 'machine');
+  G.MAP.outside.forEach(o => addRect(o, 'outside'));
   return segs;
 };
 
-/* Discretized surface cells used for the coverage measurement */
+/* Discretized surface cells used for the coverage measurement
+   (the site fence is not part of the customer's survey) */
 G.buildCells = function (segs, step = 6, cell = 12) {
   const cells = new Map();
   for (const s of segs) {
+    if (s.kind === 'fence') continue;
     const len = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
     const n = Math.max(1, Math.floor(len / step));
     for (let i = 0; i <= n; i++) {
