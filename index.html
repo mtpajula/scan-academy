@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan Academy — Laser Scanning Field Training</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">📡 Scan Academy</div>
+  <nav id="phases">
+    <button data-screen="prep"     class="phase-btn">1 · Prepare</button>
+    <button data-screen="field"    class="phase-btn">2 · Field work</button>
+    <button data-screen="register" class="phase-btn">3 · Registration</button>
+    <button data-screen="report"   class="phase-btn">4 · Report</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ PHASE 1 : PREP ============ -->
+  <section id="screen-prep" class="screen active">
+    <div class="panel wide">
+      <h1>Phase 1 — Prepare the equipment</h1>
+      <p class="lead">
+        You are heading to an industrial hall to laser-scan it for the customer.
+        The total station crew has already placed control targets — you only need your own kit.
+      </p>
+      <p class="warn">
+        ⚠ The van has <b>limited space (8 slots)</b> but there are 12 items on the shelf.
+        Choose carefully — it is very easy to accidentally forget something…
+        and you will only notice out on site. 😬
+      </p>
+
+      <div class="prep-cols">
+        <div class="prep-col">
+          <h2>🚐 Van <span id="van-count" class="pill">0 / 8</span></h2>
+          <div id="van-slots" class="item-grid"></div>
+        </div>
+        <div class="prep-col">
+          <h2>🏠 Storage shelf</h2>
+          <div id="shelf-list" class="item-list"></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btn-to-field" class="big primary">Drive to site →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 2 : FIELD WORK ============ -->
+  <section id="screen-field" class="screen">
+    <div class="field-layout">
+      <div class="canvas-wrap">
+        <canvas id="field-canvas" width="960" height="640"></canvas>
+        <div id="field-overlay" class="overlay hidden">
+          <div class="overlay-box">
+            <h2 id="field-overlay-title"></h2>
+            <p id="field-overlay-text"></p>
+            <button id="field-overlay-btn" class="big primary"></button>
+          </div>
+        </div>
+      </div>
+      <aside class="side-panel">
+        <h2>Field work</h2>
+        <p class="hint">🖱 Drag the scanner to a position, then press <b>SCAN</b> (or Space).</p>
+
+        <div class="hud">
+          <div class="hud-row"><span>Battery</span>
+            <div class="bar"><div id="battery-fill"></div></div><span id="battery-txt"></span>
+          </div>
+          <div class="hud-row"><span>Spares</span><span id="spares-txt" class="pill"></span></div>
+          <div class="hud-row"><span>Storage</span><span id="storage-txt" class="pill"></span></div>
+          <div class="hud-row"><span>Weather</span><span id="weather-txt" class="pill"></span></div>
+          <div class="hud-row"><span>Scans</span><span id="scan-count" class="pill"></span></div>
+        </div>
+
+        <button id="btn-scan" class="big primary">📷 SCAN</button>
+        <button id="btn-swap" class="small">🔋 Swap spare battery</button>
+        <div id="scan-status" class="scan-status"></div>
+
+        <h3>Scan log</h3>
+        <ul id="scan-list" class="scan-list"></ul>
+
+        <button id="btn-to-register" class="big">Finish field work →</button>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 3 : REGISTRATION ============ -->
+  <section id="screen-register" class="screen">
+    <div class="field-layout">
+      <div class="canvas-wrap">
+        <canvas id="reg-canvas" width="960" height="640"></canvas>
+        <div id="id-popup" class="id-popup hidden">
+          <div class="id-popup-title">Label target <b id="id-popup-target"></b></div>
+          <div id="id-popup-buttons" class="id-popup-buttons"></div>
+        </div>
+      </div>
+      <aside class="side-panel">
+        <h2>Registration</h2>
+        <ol class="hint">
+          <li>📌 <b>Scan 1 is already placed</b> (reference frame). Label the targets it sees, then <b>Set base scan</b>. Only the network + the selected scan are shown — one at a time.</li>
+          <li>🔗 <b>Join scans one by one:</b> pick the next scan in the list (if the selected one is from a totally different location with no overlap, choose another!), drag its cloud until it matches the registered cloud ✔, then <b>Register to network</b>. A join needs enough shared surfaces — cloud-to-cloud (dashed line).</li>
+          <li>🏷 <b>Targets must be named before a scan can be registered</b> — the checklist above the button shows what's missing; the register button stays disabled until targets are labeled (⚠ in the target list, or click the pulsing target on the canvas).</li>
+          <li>❌ Tick <b>“bad scan”</b> for shaken scans — they cannot join the network.</li>
+          <li>✔ When every good scan is in the network, <b>Finish registration</b>.</li>
+        </ol>
+
+        <div id="reg-network" class="net-status"></div>
+        <div id="reg-checklist" class="net-status" style="border-color:var(--warn)"></div>
+
+        <h3>Next scan to join</h3>
+        <ul id="reg-next-list" class="scan-list"></ul>
+
+        <button id="btn-reg" class="big primary">📌 Set base scan</button>
+        <div id="reg-status" class="scan-status"></div>
+
+        <h3>Scans</h3>
+        <ul id="reg-scan-list" class="scan-list"></ul>
+
+        <h3>Targets</h3>
+        <ul id="reg-target-list" class="scan-list"></ul>
+
+        <button id="btn-to-report" class="big" disabled>Generate report →</button>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 4 : REPORT ============ -->
+  <section id="screen-report" class="screen">
+    <div class="panel wide">
+      <h1>Phase 4 — Registration report</h1>
+      <canvas id="report-canvas" width="960" height="400"></canvas>
+      <div id="report-doc" class="report-doc"></div>
+      <div class="actions">
+        <button id="btn-deliver" class="big primary">📬 Deliver report to customer</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="score-overlay" class="overlay hidden">
+  <div class="overlay-box score-box">
+    <h1 id="score-title"></h1>
+    <div id="score-stars" class="stars"></div>
+    <div id="score-value" class="score-value"></div>
+    <ul id="score-feedback" class="feedback"></ul>
+    <button class="big primary" onclick="location.reload()">↻ Play again</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/data.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/prep.js"></script>
+<script src="js/field.js"></script>
+<script src="js/register.js"></script>
+<script src="js/report.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
