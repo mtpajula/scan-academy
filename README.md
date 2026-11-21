@@ -17,7 +17,6 @@ laser scanning. No build step, no dependencies — open `index.html` in a browse
    - no PPE → site safety locks the door to outside
    - no rain umbrella → outdoor scans get a wet window (noisy, bad scan)
    - no target ID labels → targets cannot be named in registration
-   - no laptop / no cables → (kit score)
 
 2. **Field work** — top view of an industrial hall (concrete pillars) with a
    door to a rainy yard. Total-station control targets T1–T6 are already placed.
@@ -52,9 +51,13 @@ laser scanning. No build step, no dependencies — open `index.html` in a browse
 
 4. **Report** — the customer checks against an independent survey: for every
    scan the **reported** error is shown next to the **true** error, the cloud is
-   coloured by true error, wrong target names are listed. Score (0–100):
-   usable coverage 20, true accuracy 25, target names 15, cross-checked scans 10,
-   bad scans handled 10, georeferenced + yard 10, kit 10.
+   coloured by true error, wrong target names are listed. **Score (0–100) =
+   how much of the site was delivered at the required accuracy**: usable
+   coverage 70 (only scans within the 10 mm requirement count; ~95 % = full)
+   + accuracy 30 (full at ≤ 10 mm, 0 at 30 mm). Everything else (wrong names,
+   missing redundancy, bad scans, forgotten kit) is explained as the *reason*
+   coverage or accuracy was lost; kit that stayed at the office is listed
+   neutrally, and only if it had a consequence.
 
 ## Files
 

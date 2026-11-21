@@ -528,7 +528,7 @@ G.register = {
         }
         sum += Math.hypot(w.x - p.x, w.y - p.y); n++;
       }
-      return (n ? sum / n : 0) * MM() + (s.bad ? 6 + (s.id % 5) * 2 : 0);
+      return (n ? sum / n : 0) * MM() + (s.bad ? 12 + (s.id % 5) * 2 : 0);   // shaken/wet cloud itself is fuzzy
     };
     const perScan = G.state.scans.map(s => {
       const st = s.excluded ? 'excluded' : S.status.get(s.id);
@@ -551,12 +551,14 @@ G.register = {
       georef: S.georef, redundancy: S.redundancy,
       constraints: S.cons.map(c => ({ type: c.type, a: c.a, b: c.b, name: c.name, tid: c.tid, enabled: c.enabled, error: c.error, icpRms: c.icpRms })),
       perScan,
-      // only scans that ended up roughly in the right place count as usable data
-      coverage: G.field.coverageOf(reg.filter(s => { const r = perScan.find(q => q.id === s.id); return r.trueErr != null && r.trueErr <= 50; })),
+      // only data meeting the customer's accuracy requirement counts as coverage
+      coverage: G.field.coverageOf(reg.filter(s => { const r = perScan.find(q => q.id === s.id); return r.trueErr != null && r.trueErr <= G.SPEC_MM; })),
+      coverageAll: G.field.coverageOf(reg),
       nScans: scans.length, nRegistered: regRows.length,
       reportedRms: en.length ? Math.sqrt(en.reduce((a, c) => a + c.error ** 2, 0) / en.length) : 0,
       meanTrue: regRows.length ? regRows.reduce((a, r) => a + r.trueErr, 0) / regRows.length : 0,
       maxTrue: regRows.reduce((a, r) => Math.max(a, r.trueErr), 0),
+      nOutOfSpec: regRows.filter(r => r.trueErr > G.SPEC_MM).length,
       names, namesWrong: names.filter(n => !n.ok).length,
       crossChecked: regRows.filter(r => r.dims >= 6 || r.status === 'datum' && r.dims >= 3).length,
       nBad: scans.filter(s => s.bad).length,

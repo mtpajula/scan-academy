@@ -57,7 +57,7 @@ G.report = {
     const el = document.getElementById('report-doc');
     if (!R) { el.innerHTML = '<p>No registration results.</p>'; return; }
     const f = (v) => v == null ? '—' : v.toFixed(1) + ' mm';
-    const errCls = (v) => v == null ? '' : v > 30 ? 'err' : v > 10 ? 'warnc' : 'ok';
+    const errCls = (v) => v == null ? '' : v > 3 * G.SPEC_MM ? 'err' : v > G.SPEC_MM ? 'warnc' : 'ok';
 
     const rows = R.perScan.map(r => {
       const s = S.scans.find(q => q.id === r.id);
@@ -77,7 +77,7 @@ G.report = {
     ).join('') || '<tr><td colspan="3" class="err">No constraints!</td></tr>';
 
     const wrong = R.names.filter(n => !n.ok);
-    const missing = G.EQUIPMENT.filter(e => !S.van.includes(e.id)).map(e => e.name);
+    const missing = G.EQUIPMENT.filter(e => e.effect && !S.van.includes(e.id)).map(e => e.name + ' → ' + e.effect);
     const hidden = R.reportedRms < 10 && R.maxTrue > 30;
 
     el.innerHTML = `
@@ -88,7 +88,7 @@ G.report = {
       <p class="bigstat">Reported error (adjustment): RMS ${R.reportedRms.toFixed(1)} mm · redundancy ${R.redundancy}</p>
       <p class="bigstat">True error (customer's independent check): mean ${R.meanTrue.toFixed(1)} mm · max ${R.maxTrue.toFixed(1)} mm</p>
       <p>${R.georef ? '✔ Georeferenced to the total-station control points.' : '⚠ <b>Not georeferenced</b> — fewer than two control points named; the cloud is in a local frame only.'}
-         Usable surface coverage (scans within 50 mm): <b>${(R.coverage * 100).toFixed(1)} %</b>.</p>
+         Surface coverage: <b>${(R.coverage * 100).toFixed(1)} %</b> usable (within ${G.SPEC_MM} mm) of ${(R.coverageAll * 100).toFixed(1)} % registered.</p>
       ${hidden ? `<div class="note">⚠ <b>The adjustment looked fine, but the true error is large.</b>
         A wrong target name or a failed ICP link was not checked by any other constraint (no redundancy),
         so the error was invisible. Cross-register: link each scan to two or more neighbours and name every target.</div>` : ''}
@@ -108,61 +108,72 @@ G.report = {
         ${R.goodExcluded ? ` · ⚠ ${R.goodExcluded} good scan(s) excluded` : ''}
         ${R.notConnected ? ` · ⚠ ${R.notConnected} scan(s) not connected to the network` : ''}</p>
       ${R.ghostPts ? `<p>🌧 ${R.ghostPts} rain-droplet points in the delivered cloud — remove them with a noise filter before delivery.</p>` : ''}
-      ${missing.length ? `<h3>Not packed into the van</h3><p>${missing.join(', ')}</p>` : '<p>✔ All equipment packed.</p>'}
+      ${missing.length ? `<h3>Stayed at the office</h3><p>${missing.join('; ')}</p>` : ''}
     `;
   },
 
+  /* Score = how much of the site was delivered at the required accuracy.
+     Coverage (70) counts only scans within G.SPEC_MM true error;
+     accuracy (30) is full at ≤ spec and falls to 0 at 3 × spec. */
   score() {
-    const R = G.state.results, S = G.state;
+    const R = G.state.results, SP = G.SPEC_MM;
     const parts = {
-      coverage: Math.min(R.coverage / 0.75, 1) * 20,
-      accuracy: R.nRegistered ? G.clamp((60 - R.meanTrue) / 55, 0, 1) * 25 : 0,
-      names: R.names.length ? 15 * (R.names.length - R.namesWrong) / R.names.length : 0,
-      cross: R.nRegistered ? 10 * R.crossChecked / R.nRegistered : 0,
-      bad: (R.nBad === 0 || R.badExcluded === R.nBad) ? (R.goodExcluded ? 5 : 10) : (R.badExcluded > 0 ? 4 : 0),
-      frame: (R.georef ? 6 : 0) + (R.yard ? 4 : 0),
-      kit: 10 * ['scanner', 'tripod', 'battery', 'sdcard', 'ppe', 'laptop', 'targets'].filter(id => S.van.includes(id)).length / 7,
+      coverage: 70 * Math.min(R.coverage / 0.95, 1),
+      accuracy: R.nRegistered ? 30 * G.clamp((3 * SP - R.meanTrue) / (2 * SP), 0, 1) : 0,
     };
-    return { parts, total: Math.round(Object.values(parts).reduce((a, b) => a + b, 0)) };
+    return { parts, total: Math.round(parts.coverage + parts.accuracy) };
   },
 
   deliver() {
-    const R = G.state.results, S = G.state;
-    const { total: score } = this.score();
+    const R = G.state.results, S = G.state, SP = G.SPEC_MM;
+    const { parts, total: score } = this.score();
     const stars = score >= 85 ? 3 : score >= 60 ? 2 : score >= 40 ? 1 : 0;
 
     document.getElementById('score-title').textContent =
       stars === 3 ? '🏆 Outstanding survey!' : stars === 2 ? '👍 Good job!' : stars === 1 ? '😐 Acceptable… barely' : '❌ Customer rejected the delivery';
     document.getElementById('score-stars').textContent = '★★★'.slice(0, stars) + '☆☆☆'.slice(0, 3 - stars);
-    document.getElementById('score-value').textContent = score + ' / 100 · true accuracy ' + R.meanTrue.toFixed(1) + ' mm · coverage ' + (R.coverage * 100).toFixed(0) + ' %';
+    document.getElementById('score-value').innerHTML = `${score} / 100<br><span class="score-parts">coverage ${Math.round(parts.coverage)}/70 · accuracy ${Math.round(parts.accuracy)}/30</span>`;
 
     const fb = document.getElementById('score-feedback');
     fb.innerHTML = '';
-    const add = (txt, good) => {
+    const add = (txt, kind) => {           // kind: good | bad | warn | info
       const li = document.createElement('li');
-      li.className = good ? 'good' : 'bad';
-      li.textContent = (good ? '✔ ' : '✘ ') + txt;
+      li.className = kind;
+      li.textContent = ({ good: '✔ ', bad: '✘ ', warn: '⚠ ', info: 'ℹ ' })[kind] + txt;
       fb.appendChild(li);
     };
 
-    add(`Coverage ${(R.coverage * 100).toFixed(0)}% — ` + (R.coverage >= 0.7
-      ? 'good, you moved the scanner around the obstacles.'
-      : 'concrete pillars cast shadows from any single position. More positions, and register them all!'), R.coverage >= 0.7);
-    add(`True accuracy ${R.meanTrue.toFixed(1)} mm (adjustment claimed ${R.reportedRms.toFixed(1)} mm).` +
-      (R.reportedRms < 10 && R.maxTrue > 30 ? ' A small reported error proves nothing without redundancy!' :
-       R.reportedRms > 15 ? ' The adjustment showed large errors — fix names / disable bad links before delivering.' : ''), R.meanTrue <= 10);
-    add(R.namesWrong
-      ? `${R.namesWrong} target(s) named wrong — a wrong name ties the scan to the wrong control point and drags it out of place.`
-      : R.names.length ? 'All target names correct.' : 'No targets named — the scans could not be tied to the control network.', R.names.length > 0 && !R.namesWrong);
-    add(`${R.crossChecked}/${R.nRegistered} registered scans are cross-checked (tied by two or more independent constraints). ` +
-      (R.crossChecked < R.nRegistered ? 'A scan held by one link only can be wrong without any error showing.' : ''), R.nRegistered > 0 && R.crossChecked === R.nRegistered);
-    if (R.nBad > 0) add(`Bad scans: ${R.badExcluded}/${R.nBad} excluded (vibration near the compressor, handheld, or a wet window in the rain).`, R.badExcluded === R.nBad);
-    else add('No bad scans — tripod used, compressor avoided, scanner kept dry.', true);
-    if (R.goodExcluded) add(`${R.goodExcluded} good scan(s) were thrown away.`, false);
-    add(R.georef ? 'Georeferenced to the control points.' : 'Not georeferenced — name at least two (better three or more) control targets.', R.georef);
-    add(R.yard ? 'Hall and yard are in the same registered network.' : 'The yard is missing from the registered network.', R.yard);
-    const missed = G.EQUIPMENT.filter(e => !S.van.includes(e.id));
-    if (missed.length) add('Left on the shelf: ' + missed.map(e => e.name).join(', ') + '.', false);
+    // the two things that are scored
+    const cov = (R.coverage * 100).toFixed(0), covAll = (R.coverageAll * 100).toFixed(0);
+    add(`Usable coverage ${cov}% of the site surfaces (within ${SP} mm)` +
+      (R.coverageAll - R.coverage > 0.03 ? ` — ${covAll}% was scanned, but part of it is not accurate enough.` :
+       R.coverage < 0.8 ? ' — shadows behind pillars and objects remain: more scan positions, hall AND yard.' : ' — great, the site is well covered.'),
+      R.coverage >= 0.8 ? 'good' : 'bad');
+    add(`True accuracy ${R.meanTrue.toFixed(1)} mm (requirement ${SP} mm; the adjustment claimed ${R.reportedRms.toFixed(1)} mm).`,
+      R.meanTrue <= SP ? 'good' : 'bad');
+
+    // why — only the things that actually cost coverage or accuracy
+    if (R.reportedRms < 10 && R.maxTrue > 3 * SP)
+      add('The adjustment looked fine but the true error is large — without redundancy (cross-registration) mistakes stay hidden.', 'warn');
+    if (R.reportedRms > 15)
+      add('The adjustment showed large errors — fix target names / disable failed links before delivering.', 'warn');
+    if (R.namesWrong)
+      add(`${R.namesWrong} target(s) named wrong — a wrong name ties the scan to the wrong control point.`, 'warn');
+    if (R.nOutOfSpec)
+      add(`${R.nOutOfSpec} registered scan(s) outside the ${SP} mm requirement do not count as coverage.`, 'warn');
+    if (R.nBad > R.badExcluded)
+      add(`${R.nBad - R.badExcluded} bad scan(s) delivered (vibration, handheld or wet window) — they are too fuzzy to meet the requirement.`, 'warn');
+    if (R.notConnected)
+      add(`${R.notConnected} scan(s) never got connected to the network — their area is missing.`, 'warn');
+    if (R.goodExcluded)
+      add(`${R.goodExcluded} good scan(s) were excluded — their area is missing.`, 'warn');
+    if (!R.georef)
+      add('Not georeferenced: name at least two (better three) control targets to deliver in site coordinates.', 'warn');
+
+    // what stayed at the office — only things that had an effect, no blame
+    const missed = G.EQUIPMENT.filter(e => e.effect && !S.van.includes(e.id));
+    if (missed.length)
+      add('Stayed at the office (no room in the van): ' + missed.map(e => `${e.name} → ${e.effect}`).join('; ') + '.', 'info');
 
     document.getElementById('score-overlay').classList.remove('hidden');
   },

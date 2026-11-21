@@ -37,20 +37,23 @@ G.MAP = {
 
 /* Equipment shelf. Van has limited slots → easy to forget things. */
 G.EQUIPMENT = [
-  { id: 'scanner',  name: 'Laser scanner',        desc: 'The scanner unit itself. Obviously essential.' },
-  { id: 'tripod',   name: 'Tripod',               desc: 'Handheld scanning shakes every scan.' },
-  { id: 'battery',  name: 'Spare batteries ×2',   desc: 'Each scan drains 14%. Swap a spare in when the current one runs empty.' },
-  { id: 'sdcard',   name: 'SD card',              desc: 'Without it the scanner stores only 4 scans.' },
-  { id: 'targets',  name: 'Target ID labels',     desc: 'Number plates for the targets. Without them targets cannot be identified in the scans.' },
-  { id: 'laptop',   name: 'Field laptop',         desc: 'Needed for on-site registration. No laptop = work back at the office.' },
-  { id: 'cables',   name: 'Cables & charger',     desc: 'Transfer cables. Without them data transfer is unreliable.' },
-  { id: 'ppe',      name: 'PPE (helmet, vest, boots)', desc: 'Site safety. No PPE → no access outside the hall!' },
-  { id: 'weather',  name: 'Rain umbrella',        desc: 'Keeps the scanner window dry in the rain. Its tripod clamp shadows a narrow sector.' },
+  { id: 'scanner',  name: 'Laser scanner',        desc: 'The scanner unit itself. Obviously essential.', effect: 'no scanning at all' },
+  { id: 'tripod',   name: 'Tripod',               desc: 'Handheld scanning shakes every scan.', effect: 'handheld scans were shaken' },
+  { id: 'battery',  name: 'Spare batteries ×2',   desc: 'Each scan drains 14%. Swap a spare in when the current one runs empty.', effect: 'only 7 scans on one battery' },
+  { id: 'sdcard',   name: 'SD card',              desc: 'Without it the scanner stores only 4 scans.', effect: 'scanner memory held only 4 scans' },
+  { id: 'targets',  name: 'Target ID labels',     desc: 'Number plates for the targets. Without them targets cannot be identified in the scans.', effect: 'targets could not be identified' },
+  { id: 'laptop',   name: 'Field laptop',         desc: 'Handy for checking the data on site.' },
+  { id: 'cables',   name: 'Cables & charger',     desc: 'Charging and data transfer.' },
+  { id: 'ppe',      name: 'PPE (helmet, vest, boots)', desc: 'Site safety. No PPE → no access outside the hall!', effect: 'no access to the yard' },
+  { id: 'weather',  name: 'Rain umbrella',        desc: 'Keeps the scanner window dry in the rain. Its tripod clamp shadows a narrow sector.', effect: 'outdoor scans got a wet window' },
   { id: 'tape',     name: 'Measuring tape',       desc: 'For target heights and checks.' },
   { id: 'notebook', name: 'Notebook & pen',       desc: 'Paper backup of scan log. Customers like it.' },
   { id: 'coffee',   name: 'Coffee thermos',       desc: 'Morale. The customer notices.' },
 ];
 G.VAN_SLOTS = 8;
+
+/* Customer's accuracy requirement: only data within this true error is usable */
+G.SPEC_MM = 10;
 
 /* Scanner parameters (px) */
 G.SCAN_RANGE = 520;          // max measuring range (26 m)

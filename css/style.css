@@ -169,6 +169,9 @@ canvas:active { cursor: grabbing; }
 .feedback { margin: 0 0 18px 20px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; }
 .feedback li.good { color: var(--good); }
 .feedback li.bad { color: var(--bad); }
+.feedback li.warn { color: var(--warn); }
+.feedback li.info { color: var(--dim); }
+.score-parts { font-size: 14px; color: var(--dim); }
 
 /* ---------- id popup ---------- */
 .id-popup {
